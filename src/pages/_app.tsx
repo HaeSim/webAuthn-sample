@@ -7,6 +7,7 @@ import { CssBaseline } from '@mui/material';
 import type { AppProps } from 'next/app';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
+import { SessionProvider } from 'next-auth/react';
 import { type ReactElement, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import type { URL } from 'url';
@@ -28,7 +29,10 @@ const queryClient = new QueryClient();
 const MyApp = (props: MyAppProps) => {
   const router = useRouter();
 
-  const { emotionCache = clientSideEmotionCache, pageProps } = props;
+  const {
+    emotionCache = clientSideEmotionCache,
+    pageProps: { session, ...pageProps },
+  } = props;
   const Component = props.Component as NextPageWithLayout;
 
   const getLayout = Component.getLayout ?? ((page: ReactElement) => page);
@@ -85,14 +89,16 @@ const MyApp = (props: MyAppProps) => {
         `,
         }}
       />
-      <QueryClientProvider client={queryClient}>
-        <CacheProvider value={emotionCache}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {getLayout(<Component {...pageProps} />)}
-          </ThemeProvider>
-        </CacheProvider>
-      </QueryClientProvider>
+      <SessionProvider session={session}>
+        <QueryClientProvider client={queryClient}>
+          <CacheProvider value={emotionCache}>
+            <ThemeProvider theme={theme}>
+              <CssBaseline />
+              {getLayout(<Component {...pageProps} />)}
+            </ThemeProvider>
+          </CacheProvider>
+        </QueryClientProvider>
+      </SessionProvider>
     </>
   );
 };
